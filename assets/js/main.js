@@ -3,14 +3,15 @@ const ls = window.localStorage;
 const photo = document.getElementById('uploadImage');
 const canvas = document.getElementById('canvas');
 // filename = document.getElementById( 'filename' ).value,
+const fileType = document.getElementById('fileType');
+let fileSelection;
 const colours = document.getElementById('colours');
 const context = canvas.getContext('2d');
 const fileReader = new FileReader();
 const img = new Image(); const lastImgData = ls.getItem('image');
 let x;
 let y;
-const color = ls.getItem('color') || 'black'; let neww = 0; let
-  newh = 0;
+const color = ls.getItem('color') || 'black';
 const link = document.getElementById('imgLink');
 const brightness = document.getElementById('brightness');
 const contrast = document.getElementById('contrast');
@@ -33,18 +34,6 @@ const lightGreenMaroon = [[210, 215, 85], [122, 0, 60]];
 const lightDarkBlue = [[139, 211, 230], [0, 112, 150]];
 const lightBlueMaroon = [[139, 211, 230], [122, 0, 60]];
 
-
-// if (color) {
-//   Array.prototype.forEach.call(colours, (el) => {
-//     if (el.value === color) {
-//       el.checked = true;
-//     }
-//   });
-// }
-
-// if (currentText) {
-//   filename.value = currentText;
-// }
 if (lastImgData) {
   img.src = lastImgData;
 }
@@ -55,11 +44,6 @@ fileReader.onload = function (e) {
   console.log(typeof e.target.result, e.target.result instanceof Blob);
   img.src = e.target.result;
 };
-
-
-// fileReader.onload = (e) => {
-//   img.src = e.target.result;
-// };
 
 /**
  * Converts an RGB color value to HSL. Conversion formula
@@ -104,7 +88,6 @@ const rgbToHsl = (rx, gy, bz) => {
 
 // taken from: https://codepen.io/72lions/pen/jPzLJX
 function convertToDuoTone(imageData, pixelCount, color1, color2) {
-  console.log(imageData);
   const pixels = imageData.data;
 
   const pixelArray = [];
@@ -180,7 +163,7 @@ function drawImage(duotoneColours = '') {
   let dataUrl;
   canvas.width = canvas.width;
   const pixelCount = canvas.width * canvas.height;
-  if (img.width) context.drawImage(img, x, y, neww, newh);
+  if (img.width) context.drawImage(img, 0, 0, x, y);
 
   // get the initial image data
   let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
@@ -189,7 +172,7 @@ function drawImage(duotoneColours = '') {
     const bright = adjustBrightness(imageData, brightValue);
     const newImageData = new ImageData(new Uint8ClampedArray(bright), canvas.width, canvas.height);
     context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
-    dataUrl = canvas.toDataURL();
+    dataUrl = canvas.toDataURL(fileSelection);
     link.href = dataUrl;
     link.setAttribute('download', 'duotone');
   }
@@ -198,7 +181,7 @@ function drawImage(duotoneColours = '') {
     const newContrast = adjustContrast(imageData, contrastValue);
     const newImageData = new ImageData(new Uint8ClampedArray(newContrast), canvas.width, canvas.height);
     context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
-    dataUrl = canvas.toDataURL();
+    dataUrl = canvas.toDataURL(fileSelection);
     link.href = dataUrl;
     link.setAttribute('download', 'duotone');
   }
@@ -234,13 +217,13 @@ function drawImage(duotoneColours = '') {
     const newImageData = new ImageData(new Uint8ClampedArray(duotone), canvas.width, canvas.height);
 
     context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
-    dataUrl = canvas.toDataURL();
+    dataUrl = canvas.toDataURL(fileSelection);
     link.href = dataUrl;
     link.setAttribute('download', 'duotone');
     // link.innerHTML = canvas.outerHTML;
   } else {
     context.putImageData(imageData, 0, 0, 0, 0, canvas.width, canvas.height);
-    dataUrl = canvas.toDataURL();
+    dataUrl = canvas.toDataURL(fileSelection);
     link.href = dataUrl;
     link.setAttribute('download', 'duotone');
     // link.innerHTML = canvas.outerHTML;
@@ -249,7 +232,6 @@ function drawImage(duotoneColours = '') {
   // set the urls for the img sources
   // document.getElementById( 'imageData' ).href = dataUrl;
   // document.getElementById( 'preview' ).src = dataUrl;
-
 
   // set local storage
   ls.setItem('color', color);
@@ -264,6 +246,22 @@ photo.addEventListener('change', () => {
   file = photo.files[0];
   c = '';
   return file && fileReader.readAsDataURL(file);
+});
+
+fileType.addEventListener('change', () => {
+  const f = fileType.value;
+  switch (f) {
+    case 'jpeg':
+      fileSelection = 'image/jpeg';
+      break;
+    case 'png':
+      fileSelection = 'image/png';
+      break;
+    default:
+      fileSelection = '';
+      break;
+  }
+  console.log(fileSelection);
 });
 
 canvas.addEventListener('dragover', (event) => {
@@ -328,21 +326,36 @@ colours.addEventListener('change', () => {
 });
 
 img.onload = () => {
-  const rw = img.width / canvas.width; // width and height are maximum thumbnail's bounds
-  const rh = img.height / canvas.height;
+  // const rw = img.width / canvas.width; // width and height are maximum thumbnail's bounds
+  // const rh = img.height / canvas.height;
+  // console.log(`rw is ${rw}`);
+  // console.log(`rh is ${rh}`);
+  // if (rw > rh) {
+  //   newh = Math.round(img.height / rw);
+  //   neww = canvas.width;
+  //   console.log(`neww is ${neww}`);
+  // } else {
+  //   neww = Math.round(img.width / rh);
+  //   newh = canvas.height;
+  //   console.log(`newh is ${newh}`);
+  // }
 
-  if (rw > rh) {
-    newh = Math.round(img.height / rw);
-    neww = canvas.width;
-  } else {
-    neww = Math.round(img.width / rh);
-    newh = canvas.height;
-  }
+  // canvas.width = img.width;
+  // canvas.height = img.height;
 
-  x = (canvas.width - neww) / 2;
-  y = (canvas.height - newh) / 2;
-  // x = rw;
-  // y = rh;
+  // x = (canvas.width - neww) / 2;
+  // console.log(`width is ${x}`);
+  // y = (canvas.height - newh) / 2;
+  // console.log(`height is ${y}`);
+  // // x = rw;
+  // // y = rh;
+  x = img.width;
+  y = img.height;
+  console.log(x);
+  console.log(y);
+  canvas.width = x;
+  canvas.height = y;
 
+  console.log(canvas.width);
   drawImage();
 };
