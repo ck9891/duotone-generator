@@ -16,6 +16,7 @@ const brightness = document.getElementById('brightness');
 const contrast = document.getElementById('contrast');
 let brightValue = '';
 let c = '';
+let file;
 
 
 // rgb colours for duotones.
@@ -43,14 +44,21 @@ const lightBlueMaroon = [[139, 211, 230], [122, 0, 60]];
 // if (currentText) {
 //   filename.value = currentText;
 // }
-
 if (lastImgData) {
   img.src = lastImgData;
 }
 
-fileReader.onload = (e) => {
+// eslint-disable-next-line func-names
+fileReader.onload = function (e) {
+  // eslint-disable-next-line no-console
+  console.log(typeof e.target.result, e.target.result instanceof Blob);
   img.src = e.target.result;
 };
+
+
+// fileReader.onload = (e) => {
+//   img.src = e.target.result;
+// };
 
 /**
  * Converts an RGB color value to HSL. Conversion formula
@@ -145,7 +153,7 @@ function convertToDuoTone(imageData, pixelCount, color1, color2) {
   return pixelArray;
 }
 
-function adjustBrightness(imageData, pixelCount, adjustment) {
+function adjustBrightness(imageData, adjustment) {
   const d = imageData.data;
   for (let i = 0; i < d.length; i += 4) {
     d[i] += (adjustment / 2);
@@ -168,7 +176,7 @@ function drawImage(duotoneColours = '', imageContrast = '') {
   let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
   if (brightValue !== '') {
-    const bright = adjustBrightness(imageData, pixelCount, brightValue);
+    const bright = adjustBrightness(imageData, brightValue);
     const newImageData = new ImageData(new Uint8ClampedArray(bright), canvas.width, canvas.height);
     context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
     dataUrl = canvas.toDataURL();
@@ -181,7 +189,7 @@ function drawImage(duotoneColours = '', imageContrast = '') {
     let bright;
     if (brightValue !== '') {
       console.log(imageData);
-      bright = adjustBrightness(imageData, pixelCount, brightValue);
+      bright = adjustBrightness(imageData, brightValue);
       console.log(bright);
       brightImageData = new ImageData(new Uint8ClampedArray(bright), canvas.width, canvas.height);
       context.putImageData(brightImageData, 0, 0, 0, 0, canvas.width, canvas.height);
@@ -220,7 +228,7 @@ function drawImage(duotoneColours = '', imageContrast = '') {
 drawImage();
 
 photo.addEventListener('change', () => {
-  const file = this.files[0];
+  file = photo.files[0];
   return file && fileReader.readAsDataURL(file);
 });
 
@@ -292,10 +300,10 @@ img.onload = () => {
     newh = canvas.height;
   }
 
-  // x = (canvas.width - neww) / 2;
-  // y = (canvas.height - newh) / 2;
-  x = rw;
-  y = rh;
+  x = (canvas.width - neww) / 2;
+  y = (canvas.height - newh) / 2;
+  // x = rw;
+  // y = rh;
 
   drawImage();
 };
