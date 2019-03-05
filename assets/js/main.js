@@ -7,10 +7,15 @@ const colours = document.getElementById('colours');
 const context = canvas.getContext('2d');
 const fileReader = new FileReader();
 const img = new Image(); const lastImgData = ls.getItem('image');
-let x; let y;
+let x;
+let y;
 const color = ls.getItem('color') || 'black'; let neww = 0; let
   newh = 0;
 const link = document.getElementById('imgLink');
+const brightness = document.getElementById('brightness');
+const contrast = document.getElementById('contrast');
+let brightValue = '';
+let c = '';
 
 
 // rgb colours for duotones.
@@ -90,7 +95,9 @@ const rgbToHsl = (rx, gy, bz) => {
 
 // taken from: https://codepen.io/72lions/pen/jPzLJX
 function convertToDuoTone(imageData, pixelCount, color1, color2) {
+  console.log(imageData);
   const pixels = imageData.data;
+
   const pixelArray = [];
   const gradientArray = [];
 
@@ -138,18 +145,49 @@ function convertToDuoTone(imageData, pixelCount, color1, color2) {
   return pixelArray;
 }
 
-function drawImage(duotoneColours = '') {
-  let dataUrl;
+function adjustBrightness(imageData, pixelCount, adjustment) {
+  const d = imageData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i] += (adjustment / 2);
+    d[i + 1] += (adjustment / 2);
+    d[i + 2] += (adjustment / 2);
+  }
+  return d;
+}
 
+// if brightness is set, draw current image with different brightness values
+
+
+function drawImage(duotoneColours = '', imageContrast = '') {
+  let dataUrl;
   canvas.width = canvas.width;
   const pixelCount = canvas.width * canvas.height;
   if (img.width) context.drawImage(img, x, y, neww, newh);
 
-  // get the image data
-  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-  // const { data } = imageData;
+  // get the initial image data
+  let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+  if (brightValue !== '') {
+    const bright = adjustBrightness(imageData, pixelCount, brightValue);
+    const newImageData = new ImageData(new Uint8ClampedArray(bright), canvas.width, canvas.height);
+    context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
+    dataUrl = canvas.toDataURL();
+    link.href = dataUrl;
+    link.setAttribute('download', 'duotone');
+  }
 
   if (duotoneColours !== '') {
+    let brightImageData;
+    let bright;
+    if (brightValue !== '') {
+      console.log(imageData);
+      bright = adjustBrightness(imageData, pixelCount, brightValue);
+      console.log(bright);
+      brightImageData = new ImageData(new Uint8ClampedArray(bright), canvas.width, canvas.height);
+      context.putImageData(brightImageData, 0, 0, 0, 0, canvas.width, canvas.height);
+    }
+    imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
     const duotone = convertToDuoTone(imageData, pixelCount, duotoneColours[0], duotoneColours[1]);
 
     const newImageData = new ImageData(new Uint8ClampedArray(duotone), canvas.width, canvas.height);
@@ -166,19 +204,6 @@ function drawImage(duotoneColours = '') {
     link.setAttribute('download', 'duotone');
     // link.innerHTML = canvas.outerHTML;
   }
-  // context.putImageData( imageData, 0, 0 );
-
-
-  // set the alpha values of the overlaying rectangle
-  // context.globalAlpha = 0.5;
-
-  // // fill style is the overlay color
-  // context.fillStyle = color;
-
-  // // fill the rectangle
-  // context.fillRect(x, y, neww, newh);
-
-  // create a url from the canvas data
 
   // set the urls for the img sources
   // document.getElementById( 'imageData' ).href = dataUrl;
@@ -208,9 +233,14 @@ canvas.addEventListener('drop', (event) => {
   fileReader.readAsDataURL(event.dataTransfer.files[0]);
 });
 
+brightness.addEventListener('change', () => {
+  brightValue = brightness.value;
+  drawImage(c, brightValue);
+});
+
 colours.addEventListener('change', () => {
   const colour = colours.value;
-  let c;
+
   switch (colour) {
     case 'yellowRed':
       c = yellowRed;
@@ -247,7 +277,7 @@ colours.addEventListener('change', () => {
       break;
   }
 
-  drawImage(c);
+  drawImage(c, brightValue);
 });
 
 img.onload = () => {
@@ -262,8 +292,10 @@ img.onload = () => {
     newh = canvas.height;
   }
 
-  x = (canvas.width - neww) / 2;
-  y = (canvas.height - newh) / 2;
+  // x = (canvas.width - neww) / 2;
+  // y = (canvas.height - newh) / 2;
+  x = rw;
+  y = rh;
 
   drawImage();
 };
