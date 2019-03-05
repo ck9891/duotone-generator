@@ -1,125 +1,51 @@
-var ls = window.localStorage,
-  photo = document.getElementById( 'uploadImage' ),
-  canvas = document.getElementById( 'canvas' ),
-  container = document.getElementById( 'canvasDiv' ),
-  // filename = document.getElementById( 'filename' ).value,
-  colours = document.getElementById( 'colours' ),
-  context = canvas.getContext( '2d' ),
-  fileReader = new FileReader(),
-  img = new Image(), lastImgData = ls.getItem( 'image' ),
-  x, y,
-  currentText = ls.getItem( 'text' ) || "",
-  color = ls.getItem( 'color' ) || "black", neww = 0, newh = 0;
-const link = document.getElementById( 'imgLink' );
+/* eslint-disable prefer-destructuring */
+const ls = window.localStorage;
+const photo = document.getElementById('uploadImage');
+const canvas = document.getElementById('canvas');
+// filename = document.getElementById( 'filename' ).value,
+const colours = document.getElementById('colours');
+const context = canvas.getContext('2d');
+const fileReader = new FileReader();
+const img = new Image(); const lastImgData = ls.getItem('image');
+let x; let y;
+const color = ls.getItem('color') || 'black'; let neww = 0; let
+  newh = 0;
+const link = document.getElementById('imgLink');
 
 
 // rgb colours for duotones.
 // light colour goes first
-let yellowRed = [ [ 251, 209, 1 ], [ 166, 25, 46 ] ],
-  yellowGreen = [ [ 251, 209, 1 ], [ 0, 123, 75 ] ],
-  yellowDarkBlue = [ [ 251, 209, 1 ], [ 0, 112, 150 ] ],
-  yellowMaroon = [ [ 251, 209, 1 ], [ 122, 0, 60 ] ],
-  lightGreenRed = [ [ 210, 215, 85 ], [ 166, 25, 46 ] ],
-  lightDarkGreen = [ [ 210, 215, 85 ], [ 0, 123, 75 ] ],
-  lightGreenDarkBlue = [ [ 210, 215, 85 ], [ 0, 112, 150 ] ],
-  lightGreenMaroon = [ [ 210, 215, 85 ], [ 122, 0, 60 ] ],
-  lightDarkBlue = [ [ 139, 211, 230 ], [ 0, 112, 150 ] ],
-  lightBlueMaroon = [ [ 139, 211, 230 ], [ 122, 0, 60 ] ];
+const yellowRed = [[251, 209, 1], [166, 25, 46]];
+const yellowGreen = [[251, 209, 1], [0, 123, 75]];
+const yellowDarkBlue = [[251, 209, 1], [0, 112, 150]];
+const yellowMaroon = [[251, 209, 1], [122, 0, 60]];
+const lightGreenRed = [[210, 215, 85], [166, 25, 46]];
+const lightDarkGreen = [[210, 215, 85], [0, 123, 75]];
+const lightGreenDarkBlue = [[210, 215, 85], [0, 112, 150]];
+const lightGreenMaroon = [[210, 215, 85], [122, 0, 60]];
+const lightDarkBlue = [[139, 211, 230], [0, 112, 150]];
+const lightBlueMaroon = [[139, 211, 230], [122, 0, 60]];
 
 
+// if (color) {
+//   Array.prototype.forEach.call(colours, (el) => {
+//     if (el.value === color) {
+//       el.checked = true;
+//     }
+//   });
+// }
 
-if ( color ) {
-  Array.prototype.forEach.call( colours, function ( el ) {
-    if ( el.value === color ) {
-      el.checked = true;
-    }
-  } );
-}
+// if (currentText) {
+//   filename.value = currentText;
+// }
 
-if ( currentText ) {
-  filename.value = currentText;
-}
-
-if ( lastImgData ) {
+if (lastImgData) {
   img.src = lastImgData;
 }
 
-fileReader.onload = function ( e ) {
-  console.log( typeof e.target.result, e.target.result instanceof Blob );
+fileReader.onload = (e) => {
   img.src = e.target.result;
 };
-
-img.onload = function () {
-  var rw = img.width / canvas.width; // width and height are maximum thumbnail's bounds
-  var rh = img.height / canvas.height;
-
-  if ( rw > rh ) {
-    newh = Math.round( img.height / rw );
-    neww = canvas.width;
-  }
-  else {
-    neww = Math.round( img.width / rh );
-    newh = canvas.height;
-  }
-
-  x = ( canvas.width - neww ) / 2,
-    y = ( canvas.height - newh ) / 2;
-
-  drawImage();
-};
-
-photo.addEventListener( 'change', function () {
-  var file = this.files[ 0 ];
-  return file && fileReader.readAsDataURL( file );
-} );
-
-canvas.addEventListener( 'dragover', function ( event ) {
-  event.preventDefault();
-} );
-
-canvas.addEventListener( 'drop', function ( event ) {
-  event.preventDefault();
-  fileReader.readAsDataURL( event.dataTransfer.files[ 0 ] );
-} );
-
-colours.addEventListener( 'change', function ( e ) {
-  let colour = colours.value, c;
-  switch ( colour ) {
-    case 'yellowRed':
-      c = yellowRed;
-      break;
-    case 'yellowGreen':
-      c = yellowGreen;
-      break;
-    case 'yellowDarkBlue':
-      c = yellowDarkBlue;
-      break;
-    case 'yellowMaroon':
-      c = yellowMaroon;
-      break;
-    case 'lightGreenRed':
-      c = lightGreenRed;
-      break
-    case 'lightDarkGreen':
-      c = lightDarkGreen;
-      break;
-    case 'lightGreenDarkBlue':
-      c = lightGreenDarkBlue;
-      break;
-    case 'lightGreenMaroon':
-      c = lightGreenMaroon;
-      break;
-    case 'lightDarkBlue':
-      c = lightDarkBlue;
-      break;
-    case 'lightBlueMaroon':
-      c = lightBlueMaroon;
-      break;
-  }
-
-  drawImage( c );
-} );
-
 
 /**
  * Converts an RGB color value to HSL. Conversion formula
@@ -128,116 +54,122 @@ colours.addEventListener( 'change', function ( e ) {
  * returns h, s, and l in the set [0, 1].
  * Taken from: https://codepen.io/72lions/pen/jPzLJX
  */
-var rgbToHsl = function ( r, g, b ) {
+const rgbToHsl = (rx, gy, bz) => {
+  const r = rx / 255;
+  const g = gy / 255;
+  const b = bz / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h; let s; const
+    l = (max + min) / 2;
 
-  r /= 255, g /= 255, b /= 255;
-  var max = Math.max( r, g, b ),
-    min = Math.min( r, g, b );
-  var h, s, l = ( max + min ) / 2;
-
-  if ( max == min ) {
-    h = s = 0; // achromatic
+  if (max === min) {
+    h = 0;
+    s = 0; // achromatic
   } else {
-    var d = max - min;
-    s = l > 0.5 ? d / ( 2 - max - min ) : d / ( max + min );
-    switch ( max ) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
       case r:
-        h = ( g - b ) / d + ( g < b ? 6 : 0 );
+        h = (g - b) / d + (g < b ? 6 : 0);
         break;
       case g:
-        h = ( b - r ) / d + 2;
+        h = (b - r) / d + 2;
         break;
       case b:
-        h = ( r - g ) / d + 4;
+        h = (r - g) / d + 4;
+        break;
+      default:
         break;
     }
     h /= 6;
   }
 
-  return [ h, s, l ];
-}
+  return [h, s, l];
+};
 
 // taken from: https://codepen.io/72lions/pen/jPzLJX
-function convertToDuoTone ( imageData, pixelCount, color1, color2 ) {
-  var pixels = imageData.data;
-  var pixelArray = [];
-  var gradientArray = [];
+function convertToDuoTone(imageData, pixelCount, color1, color2) {
+  const pixels = imageData.data;
+  const pixelArray = [];
+  const gradientArray = [];
 
   // Creates a gradient of 255 colors between color1 and color2
-  for ( var d = 0; d < 255; d += 1 ) {
-    var ratio = d / 255;
-    var l = ratio;
-    var rA = Math.floor( color1[ 0 ] * l + color2[ 0 ] * ( 1 - l ) );
-    var gA = Math.floor( color1[ 1 ] * l + color2[ 1 ] * ( 1 - l ) );
-    var bA = Math.floor( color1[ 2 ] * l + color2[ 2 ] * ( 1 - l ) );
-    gradientArray.push( [ rA, gA, bA ] );
+  for (let d = 0; d < 255; d += 1) {
+    const ratio = d / 255;
+    const l = ratio;
+    const rA = Math.floor(color1[0] * l + color2[0] * (1 - l));
+    const gA = Math.floor(color1[1] * l + color2[1] * (1 - l));
+    const bA = Math.floor(color1[2] * l + color2[2] * (1 - l));
+    gradientArray.push([rA, gA, bA]);
   }
 
-  for ( var i = 0, offset, r, g, b, a, srcHSL, convertedHSL; i < pixelCount; i++ ) {
+  let offset;
+  let r;
+  let g;
+  let b;
+  let a;
+  for (let i = 0; i < pixelCount; i += 1) {
     offset = i * 4;
     // Gets every color and the alpha channel (r, g, b, a)
-    r = pixels[ offset + 0 ];
-    g = pixels[ offset + 1 ];
-    b = pixels[ offset + 2 ];
-    a = pixels[ offset + 3 ];
+    r = pixels[offset + 0];
+    g = pixels[offset + 1];
+    b = pixels[offset + 2];
+    a = pixels[offset + 3];
 
     // Gets the avg
-    var avg = Math.floor( 0.299 * r + 0.587 * g + 0.114 * b );
+    const avg = Math.floor(0.299 * r + 0.587 * g + 0.114 * b);
     // Gets the hue, saturation and luminosity
-    var hsl = rgbToHsl( avg, avg, avg );
+    const hsl = rgbToHsl(avg, avg, avg);
     // The luminosity from 0 to 255
-    var luminosity = Math.max( 0, Math.min( 254, Math.floor( ( hsl[ 2 ] * 254 ) ) ) );
+    const luminosity = Math.max(0, Math.min(254, Math.floor((hsl[2] * 254))));
 
     // Swap every color with the equivalent from the gradient array
-    r = gradientArray[ luminosity ][ 0 ];
-    g = gradientArray[ luminosity ][ 1 ];
-    b = gradientArray[ luminosity ][ 2 ];
+    r = gradientArray[luminosity][0];
+    g = gradientArray[luminosity][1];
+    b = gradientArray[luminosity][2];
 
-    pixelArray.push( r );
-    pixelArray.push( g );
-    pixelArray.push( b );
-    pixelArray.push( a );
-
+    pixelArray.push(r);
+    pixelArray.push(g);
+    pixelArray.push(b);
+    pixelArray.push(a);
   }
 
   return pixelArray;
-};
+}
 
-function drawImage ( duotoneColours = '' ) {
-  var dataUrl;
+function drawImage(duotoneColours = '') {
+  let dataUrl;
 
   canvas.width = canvas.width;
-  let pixelCount = canvas.width * canvas.height;
-  if ( img.width ) context.drawImage( img, x, y, neww, newh );
+  const pixelCount = canvas.width * canvas.height;
+  if (img.width) context.drawImage(img, x, y, neww, newh);
 
   // get the image data
-  let imageData = context.getImageData( 0, 0, canvas.width, canvas.height );
-  let data = imageData.data;
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  // const { data } = imageData;
 
-  if ( duotoneColours != '' ) {
-    let duotone = convertToDuoTone( imageData, pixelCount, duotoneColours[ 0 ], duotoneColours[ 1 ] );
+  if (duotoneColours !== '') {
+    const duotone = convertToDuoTone(imageData, pixelCount, duotoneColours[0], duotoneColours[1]);
 
-    let newImageData = new ImageData( new Uint8ClampedArray( duotone ), canvas.width, canvas.height );
+    const newImageData = new ImageData(new Uint8ClampedArray(duotone), canvas.width, canvas.height);
 
-    context.putImageData( newImageData, 0, 0, 0, 0, canvas.width, canvas.height );
+    context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
     dataUrl = canvas.toDataURL();
     link.href = dataUrl;
-    link.setAttribute( 'download', 'duotone' );
+    link.setAttribute('download', 'duotone');
     // link.innerHTML = canvas.outerHTML;
-
   } else {
-
-    context.putImageData( imageData, 0, 0, 0, 0, canvas.width, canvas.height );
+    context.putImageData(imageData, 0, 0, 0, 0, canvas.width, canvas.height);
     dataUrl = canvas.toDataURL();
     link.href = dataUrl;
-    link.setAttribute( 'download', 'duotone' );
+    link.setAttribute('download', 'duotone');
     // link.innerHTML = canvas.outerHTML;
-
   }
   // context.putImageData( imageData, 0, 0 );
 
 
-  //set the alpha values of the overlaying rectangle
+  // set the alpha values of the overlaying rectangle
   // context.globalAlpha = 0.5;
 
   // // fill style is the overlay color
@@ -254,10 +186,84 @@ function drawImage ( duotoneColours = '' ) {
 
 
   // set local storage
-  ls.setItem( 'color', color );
-  ls.setItem( 'image', img.src );
+  ls.setItem('color', color);
+  ls.setItem('image', img.src);
 }
 
 // draw the image
 
 drawImage();
+
+photo.addEventListener('change', () => {
+  const file = this.files[0];
+  return file && fileReader.readAsDataURL(file);
+});
+
+canvas.addEventListener('dragover', (event) => {
+  event.preventDefault();
+});
+
+canvas.addEventListener('drop', (event) => {
+  event.preventDefault();
+  fileReader.readAsDataURL(event.dataTransfer.files[0]);
+});
+
+colours.addEventListener('change', () => {
+  const colour = colours.value;
+  let c;
+  switch (colour) {
+    case 'yellowRed':
+      c = yellowRed;
+      break;
+    case 'yellowGreen':
+      c = yellowGreen;
+      break;
+    case 'yellowDarkBlue':
+      c = yellowDarkBlue;
+      break;
+    case 'yellowMaroon':
+      c = yellowMaroon;
+      break;
+    case 'lightGreenRed':
+      c = lightGreenRed;
+      break;
+    case 'lightDarkGreen':
+      c = lightDarkGreen;
+      break;
+    case 'lightGreenDarkBlue':
+      c = lightGreenDarkBlue;
+      break;
+    case 'lightGreenMaroon':
+      c = lightGreenMaroon;
+      break;
+    case 'lightDarkBlue':
+      c = lightDarkBlue;
+      break;
+    case 'lightBlueMaroon':
+      c = lightBlueMaroon;
+      break;
+    default:
+      c = '';
+      break;
+  }
+
+  drawImage(c);
+});
+
+img.onload = () => {
+  const rw = img.width / canvas.width; // width and height are maximum thumbnail's bounds
+  const rh = img.height / canvas.height;
+
+  if (rw > rh) {
+    newh = Math.round(img.height / rw);
+    neww = canvas.width;
+  } else {
+    neww = Math.round(img.width / rh);
+    newh = canvas.height;
+  }
+
+  x = (canvas.width - neww) / 2;
+  y = (canvas.height - newh) / 2;
+
+  drawImage();
+};
