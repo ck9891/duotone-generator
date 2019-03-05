@@ -15,6 +15,7 @@ const link = document.getElementById('imgLink');
 const brightness = document.getElementById('brightness');
 const contrast = document.getElementById('contrast');
 let brightValue = '';
+let contrastValue = '';
 let c = '';
 let file;
 
@@ -163,10 +164,19 @@ function adjustBrightness(imageData, adjustment) {
   return d;
 }
 
-// if brightness is set, draw current image with different brightness values
+function adjustContrast(imageData, imageContrast) { // input range [-100..100]
+  const d = imageData.data;
+  const imageC = (imageContrast / 100) + 1; // convert to decimal & shift range: [0..2]
+  const intercept = 128 * (1 - imageC);
+  for (let i = 0; i < d.length; i += 4) { // r,g,b,a
+    d[i] = d[i] * imageC + intercept;
+    d[i + 1] = d[i + 1] * imageC + intercept;
+    d[i + 2] = d[i + 2] * imageC + intercept;
+  }
+  return d;
+}
 
-
-function drawImage(duotoneColours = '', imageContrast = '') {
+function drawImage(duotoneColours = '') {
   let dataUrl;
   canvas.width = canvas.width;
   const pixelCount = canvas.width * canvas.height;
@@ -184,9 +194,20 @@ function drawImage(duotoneColours = '', imageContrast = '') {
     link.setAttribute('download', 'duotone');
   }
 
+  if (contrastValue !== '') {
+    const newContrast = adjustContrast(imageData, contrastValue);
+    const newImageData = new ImageData(new Uint8ClampedArray(newContrast), canvas.width, canvas.height);
+    context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
+    dataUrl = canvas.toDataURL();
+    link.href = dataUrl;
+    link.setAttribute('download', 'duotone');
+  }
+
   if (duotoneColours !== '') {
     let brightImageData;
+    let contrastImageData;
     let bright;
+    let newContrast;
     if (brightValue !== '') {
       console.log(imageData);
       bright = adjustBrightness(imageData, brightValue);
@@ -194,6 +215,18 @@ function drawImage(duotoneColours = '', imageContrast = '') {
       brightImageData = new ImageData(new Uint8ClampedArray(bright), canvas.width, canvas.height);
       context.putImageData(brightImageData, 0, 0, 0, 0, canvas.width, canvas.height);
     }
+    // update imageData
+    imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    if (contrastValue !== '') {
+      console.log(imageData);
+      newContrast = adjustContrast(imageData, contrastValue);
+      console.log(newContrast);
+      contrastImageData = new ImageData(new Uint8ClampedArray(newContrast), canvas.width, canvas.height);
+      context.putImageData(contrastImageData, 0, 0, 0, 0, canvas.width, canvas.height);
+    }
+
+    // update imageData
     imageData = context.getImageData(0, 0, canvas.width, canvas.height);
 
     const duotone = convertToDuoTone(imageData, pixelCount, duotoneColours[0], duotoneColours[1]);
@@ -229,6 +262,7 @@ drawImage();
 
 photo.addEventListener('change', () => {
   file = photo.files[0];
+  c = '';
   return file && fileReader.readAsDataURL(file);
 });
 
@@ -243,7 +277,12 @@ canvas.addEventListener('drop', (event) => {
 
 brightness.addEventListener('change', () => {
   brightValue = brightness.value;
-  drawImage(c, brightValue);
+  drawImage(c);
+});
+
+contrast.addEventListener('change', () => {
+  contrastValue = contrast.value;
+  drawImage(c);
 });
 
 colours.addEventListener('change', () => {
@@ -285,7 +324,7 @@ colours.addEventListener('change', () => {
       break;
   }
 
-  drawImage(c, brightValue);
+  drawImage(c);
 });
 
 img.onload = () => {
