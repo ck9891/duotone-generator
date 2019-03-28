@@ -2,16 +2,14 @@
 const ls = window.localStorage;
 const photo = document.getElementById('uploadImage');
 const canvas = document.getElementById('canvas');
-// filename = document.getElementById( 'filename' ).value,
 const fileType = document.getElementById('fileType');
-let fileSelection;
+const fileSelection = 'image/jpeg';
 const colours = document.getElementById('colours');
 const context = canvas.getContext('2d');
 const fileReader = new FileReader();
 const img = new Image(); const lastImgData = ls.getItem('image');
 let x;
 let y;
-const color = ls.getItem('color') || 'black';
 const link = document.getElementById('imgLink');
 const brightness = document.getElementById('brightness');
 const contrast = document.getElementById('contrast');
@@ -23,16 +21,16 @@ let file;
 
 // rgb colours for duotones.
 // light colour goes first
-const yellowRed = [[251, 209, 1], [166, 25, 46]];
-const yellowGreen = [[251, 209, 1], [0, 123, 75]];
-const yellowDarkBlue = [[251, 209, 1], [0, 112, 150]];
-const yellowMaroon = [[251, 209, 1], [122, 0, 60]];
-const lightGreenRed = [[210, 215, 85], [166, 25, 46]];
-const lightDarkGreen = [[210, 215, 85], [0, 123, 75]];
-const lightGreenDarkBlue = [[210, 215, 85], [0, 112, 150]];
-const lightGreenMaroon = [[210, 215, 85], [122, 0, 60]];
-const lightDarkBlue = [[139, 211, 230], [0, 112, 150]];
-const lightBlueMaroon = [[139, 211, 230], [122, 0, 60]];
+const yellowRed = [[255, 210, 0], [171, 25, 46]];
+const yellowGreen = [[255, 210, 0], [0, 122, 76]];
+const yellowDarkBlue = [[255, 210, 0], [0, 110, 151]];
+const yellowMaroon = [[255, 210, 0], [111, 29, 70]];
+const lightGreenRed = [[212, 215, 86], [171, 25, 46]];
+const lightDarkGreen = [[212, 215, 86], [0, 122, 76]];
+const lightGreenDarkBlue = [[212, 215, 86], [0, 110, 151]];
+const lightGreenMaroon = [[212, 215, 86], [111, 29, 70]];
+const lightDarkBlue = [[136, 210, 231], [0, 110, 151]];
+const lightBlueMaroon = [[136, 210, 231], [111, 29, 70]];
 
 if (lastImgData) {
   img.src = lastImgData;
@@ -173,8 +171,6 @@ function drawImage(duotoneColours = '') {
     const newImageData = new ImageData(new Uint8ClampedArray(bright), canvas.width, canvas.height);
     context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
     dataUrl = canvas.toDataURL(fileSelection);
-    link.href = dataUrl;
-    link.setAttribute('download', 'duotone');
   }
 
   if (contrastValue !== '') {
@@ -182,8 +178,6 @@ function drawImage(duotoneColours = '') {
     const newImageData = new ImageData(new Uint8ClampedArray(newContrast), canvas.width, canvas.height);
     context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
     dataUrl = canvas.toDataURL(fileSelection);
-    link.href = dataUrl;
-    link.setAttribute('download', 'duotone');
   }
 
   if (duotoneColours !== '') {
@@ -218,24 +212,33 @@ function drawImage(duotoneColours = '') {
 
     context.putImageData(newImageData, 0, 0, 0, 0, canvas.width, canvas.height);
     dataUrl = canvas.toDataURL(fileSelection);
+    console.log(fileSelection);
     link.href = dataUrl;
     link.setAttribute('download', 'duotone');
     // link.innerHTML = canvas.outerHTML;
   } else {
     context.putImageData(imageData, 0, 0, 0, 0, canvas.width, canvas.height);
     dataUrl = canvas.toDataURL(fileSelection);
+    console.log(fileSelection);
     link.href = dataUrl;
     link.setAttribute('download', 'duotone');
     // link.innerHTML = canvas.outerHTML;
   }
-
+  canvas.toBlob((blob) => {
+    const newImg = document.createElement('img');
+    const url = URL.createObjectURL(blob);
+    newImg.onload = () => {
+      // no longer need to read the blob so it's revoked
+      URL.revokeObjectURL(url);
+    };
+    // newImg.src = url;
+    // document.body.appendChild(newImg);
+    link.href = url;
+    link.setAttribute('download', 'duotone');
+  });
   // set the urls for the img sources
   // document.getElementById( 'imageData' ).href = dataUrl;
   // document.getElementById( 'preview' ).src = dataUrl;
-
-  // set local storage
-  ls.setItem('color', color);
-  ls.setItem('image', img.src);
 }
 
 // draw the image
@@ -248,21 +251,21 @@ photo.addEventListener('change', () => {
   return file && fileReader.readAsDataURL(file);
 });
 
-fileType.addEventListener('change', () => {
-  const f = fileType.value;
-  switch (f) {
-    case 'jpeg':
-      fileSelection = 'image/jpeg';
-      break;
-    case 'png':
-      fileSelection = 'image/png';
-      break;
-    default:
-      fileSelection = '';
-      break;
-  }
-  console.log(fileSelection);
-});
+// fileType.addEventListener('change', () => {
+//   const f = fileType.value;
+//   switch (f) {
+//     case 'jpeg':
+//       fileSelection = 'image/jpeg';
+//       break;
+//     case 'png':
+//       fileSelection = 'image/png';
+//       break;
+//     default:
+//       fileSelection = 'image/jpeg';
+//       break;
+//   }
+//   console.log(fileSelection);
+// });
 
 canvas.addEventListener('dragover', (event) => {
   event.preventDefault();
