@@ -3,7 +3,7 @@ const ls = window.localStorage;
 const photo = document.getElementById('uploadImage');
 const canvas = document.getElementById('canvas');
 const fileType = document.getElementById('fileType');
-const fileSelection = 'image/jpeg';
+let fileSelection;
 const colours = document.getElementById('colours');
 const context = canvas.getContext('2d');
 const fileReader = new FileReader();
@@ -235,7 +235,7 @@ function drawImage(duotoneColours = '') {
     // document.body.appendChild(newImg);
     link.href = url;
     link.setAttribute('download', 'duotone');
-  });
+  }, fileSelection);
   // set the urls for the img sources
   // document.getElementById( 'imageData' ).href = dataUrl;
   // document.getElementById( 'preview' ).src = dataUrl;
@@ -251,21 +251,22 @@ photo.addEventListener('change', () => {
   return file && fileReader.readAsDataURL(file);
 });
 
-// fileType.addEventListener('change', () => {
-//   const f = fileType.value;
-//   switch (f) {
-//     case 'jpeg':
-//       fileSelection = 'image/jpeg';
-//       break;
-//     case 'png':
-//       fileSelection = 'image/png';
-//       break;
-//     default:
-//       fileSelection = 'image/jpeg';
-//       break;
-//   }
-//   console.log(fileSelection);
-// });
+fileType.addEventListener('change', () => {
+  const f = fileType.value;
+  switch (f) {
+    case 'jpeg':
+      fileSelection = 'image/jpeg';
+      break;
+    case 'png':
+      fileSelection = 'image/png';
+      break;
+    default:
+      fileSelection = 'image/jpeg';
+      break;
+  }
+  drawImage();
+  console.log(fileSelection);
+});
 
 canvas.addEventListener('dragover', (event) => {
   event.preventDefault();
